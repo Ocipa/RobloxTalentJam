@@ -1,0 +1,10 @@
+.vscode
+/node_modules
+/out
+/include
+*.tsbuildinfo
+
+*.rbxl
+*.rbxl.lock
+
+flamework.build
