@@ -9,10 +9,10 @@ const pathfindingService = game.GetService("PathfindingService")
 const runService = game.GetService("RunService")
 
 const agentParams: AgentParameters = {
-    AgentRadius: 1.75,
-    AgentHeight: 7,
+    AgentRadius: 1.8,
+    AgentHeight: 4,
     AgentCanJump: true,
-    WaypointSpacing: 4,
+    WaypointSpacing: 3.6,
     Costs: {
 
     }
@@ -22,9 +22,15 @@ export class Robot {
     owner?: Player
     model: RobotModel
 
+    currentWaypoint: number
+    waypoints: Array<PathWaypoint>
+
     constructor(owner?: Player, position?: Vector3) {
         this.owner = owner
         this.model = this.CreateModel()
+
+        this.currentWaypoint = 0
+        this.waypoints = []
 
         this.Spawn(position)
 
@@ -64,11 +70,25 @@ export class Robot {
         }
     }
 
+    MoveToNextWaypoint(): void {
+        this.currentWaypoint ++
+
+        const humanoid = this.model.Humanoid
+        humanoid.MoveTo(this.waypoints[this.currentWaypoint].Position)
+
+        if (this.waypoints[this.currentWaypoint].Action === Enum.PathWaypointAction.Jump) {
+            humanoid.Jump = true
+        }
+    }
+
     ComputePath(target: Vector3): Path {
         const start = this.GetPosition()
         
         const path = pathfindingService.CreatePath(agentParams)
         path.ComputeAsync(start, target)
+
+        this.waypoints = path.GetWaypoints()
+        this.currentWaypoint = 0
         return path
     }
 }
