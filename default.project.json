@@ -47,6 +47,10 @@
 
 			"Terrain": {
 				"$path": "assets/terrain.rbxm"
+			},
+
+			"debug": {
+				"$className": "Folder"
 			}
 		},
 		"HttpService": {

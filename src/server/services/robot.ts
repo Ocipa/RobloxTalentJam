@@ -15,13 +15,15 @@ export class RobotService implements OnStart, OnTick {
         this.robots = []
 
         const starts = workspace.FindFirstChild("starts") as Folder
-        for (const start of starts.GetChildren() as Array<Part>) {
-            const test2 = workspace.FindFirstChild("test2") as Part
-
-            const robot = this.AddRobot(undefined, start.Position)
-            const path = robot.ComputePath(test2.Position)
-
-            this.RenderPath(path)
+        if (starts) {
+            for (const start of starts.GetChildren() as Array<Part>) {
+                const test2 = workspace.FindFirstChild("test2") as Part
+    
+                const robot = this.AddRobot(undefined, start.Position)
+                const path = robot.ComputePath(test2.Position)
+    
+                this.RenderDebugPath(path)
+            }
         }
     }
 
@@ -48,33 +50,41 @@ export class RobotService implements OnStart, OnTick {
         return robots
     }
 
-    RenderPath(path: Path): void {
+    RenderDebugPath(path: Path): void {
         const waypoints = path.GetWaypoints()
+        const debugFolder = (workspace.FindFirstChild("debug") || workspace) as Folder
 
         for (let i=0; i < waypoints.size() - 1; i++) {
-            const part = new Instance("Part")
-            part.Size = Vector3.one
-            part.Position = waypoints[i].Position
-            part.CanCollide = false
-            part.Anchored = true
-            part.Shape = Enum.PartType.Ball
-            part.TopSurface = Enum.SurfaceType.Smooth
-            part.BottomSurface = Enum.SurfaceType.Smooth
-            part.Color = Color3.fromRGB(225, 100, 75)
-            part.Parent = workspace
+            const pointPart = new Instance("Part")
+            pointPart.Size = Vector3.one
+            pointPart.Position = waypoints[i].Position
+            pointPart.CanCollide = false
+            pointPart.Anchored = true
+            pointPart.Shape = Enum.PartType.Ball
+            pointPart.TopSurface = Enum.SurfaceType.Smooth
+            pointPart.BottomSurface = Enum.SurfaceType.Smooth
+            pointPart.Color = Color3.fromRGB(225, 100, 75)
+            pointPart.Name = tostring(i)
+            pointPart.Parent = debugFolder
 
-            const middle = new Instance("Part")
-            middle.Size = new Vector3(0.25, 0.25, waypoints[i].Position.sub(waypoints[i + 1].Position).Magnitude)
-            middle.CFrame = CFrame.lookAt(
+            let pathColor = Color3.fromRGB(75, 225, 100)
+            if (waypoints[i + 1].Action === Enum.PathWaypointAction.Jump) {
+                pathColor = Color3.fromRGB(75, 100, 225)
+            }
+
+            const pathPart = new Instance("Part")
+            pathPart.Size = new Vector3(0.25, 0.25, waypoints[i].Position.sub(waypoints[i + 1].Position).Magnitude)
+            pathPart.CFrame = CFrame.lookAt(
                 waypoints[i].Position.sub(waypoints[i].Position.sub(waypoints[i + 1].Position).div(2)),
                 waypoints[i + 1].Position
             )
-            middle.CanCollide = false
-            middle.Anchored = true
-            middle.TopSurface = Enum.SurfaceType.Smooth
-            middle.BottomSurface = Enum.SurfaceType.Smooth
-            middle.Color = Color3.fromRGB(75, 225, 100)
-            middle.Parent = workspace
+            pathPart.CanCollide = false
+            pathPart.Anchored = true
+            pathPart.TopSurface = Enum.SurfaceType.Smooth
+            pathPart.BottomSurface = Enum.SurfaceType.Smooth
+            pathPart.Color = pathColor
+            pathPart.Name = tostring(i)
+            pathPart.Parent = debugFolder
         }
     }
 
