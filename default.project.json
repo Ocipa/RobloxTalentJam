@@ -8,9 +8,7 @@
 		"$className": "DataModel",
 		"ServerScriptService": {
 			"$className": "ServerScriptService",
-			"TS": {
-				"$path": "out/server"
-			}
+			"$path": "out/server"
 		},
 		"ReplicatedStorage": {
 			"$className": "ReplicatedStorage",
@@ -23,9 +21,8 @@
 					}
 				}
 			},
-			"TS": {
-				"$path": "out/shared"
-			},
+
+			"$path": "out/shared",
 
 			"robot" : {
 				"$path": "assets/robot.rbxm"
@@ -35,9 +32,7 @@
 			"$className": "StarterPlayer",
 			"StarterPlayerScripts": {
 				"$className": "StarterPlayerScripts",
-				"TS": {
-					"$path": "out/client"
-				}
+				"$path": "out/client"
 			}
 		},
 		"Workspace": {
