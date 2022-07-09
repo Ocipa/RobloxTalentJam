@@ -24,8 +24,8 @@
 
 			"$path": "out/shared",
 
-			"robot" : {
-				"$path": "assets/robot.rbxm"
+			"robotModel" : {
+				"$path": "assets/robotModel.rbxm"
 			}
 		},
 		"StarterPlayer": {
