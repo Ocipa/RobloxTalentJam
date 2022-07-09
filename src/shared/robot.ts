@@ -25,12 +25,18 @@ export class Robot {
     currentWaypoint: number
     waypoints: Array<PathWaypoint>
 
+    action: "following" | "attacking"
+    moving: boolean
+
     constructor(owner?: Player, position?: Vector3) {
         this.owner = owner
         this.model = this.CreateModel()
 
         this.currentWaypoint = 0
         this.waypoints = []
+
+        this.action = "following"
+        this.moving = false
 
         this.Spawn(position)
 
@@ -72,6 +78,10 @@ export class Robot {
 
     MoveToNextWaypoint(): void {
         this.currentWaypoint ++
+        
+        if (!this.waypoints[this.currentWaypoint]) {return}
+
+        this.moving = true
 
         const humanoid = this.model.Humanoid
         humanoid.MoveTo(this.waypoints[this.currentWaypoint].Position)

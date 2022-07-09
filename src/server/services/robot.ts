@@ -14,21 +14,21 @@ export class RobotService implements OnStart, OnTick {
     constructor() {
         this.robots = []
 
-        const starts = workspace.FindFirstChild("starts") as Folder
-        task.delay(1, () => {
-            if (starts) {
-                for (const start of starts.GetChildren() as Array<Part>) {
-                    const test2 = workspace.FindFirstChild("test2") as Part
+        // const starts = workspace.FindFirstChild("starts") as Folder
+        // task.delay(1, () => {
+        //     if (starts) {
+        //         for (const start of starts.GetChildren() as Array<Part>) {
+        //             const test2 = workspace.FindFirstChild("test2") as Part
         
-                    const robot = this.AddRobot(undefined, start.Position)
-                    const path = robot.ComputePath(test2.Position)
+        //             const robot = this.AddRobot(undefined, start.Position)
+        //             const path = robot.ComputePath(test2.Position)
         
-                    this.RenderDebugPath(path)
+        //             this.RenderDebugPath(path)
     
-                    robot.MoveToNextWaypoint()
-                }
-            }
-        })
+        //             robot.MoveToNextWaypoint()
+        //         }
+        //     }
+        // })
     }
 
     AddRobot(owner?: Player, position?: Vector3): Robot {
@@ -39,6 +39,7 @@ export class RobotService implements OnStart, OnTick {
     }
 
     FinishedMoveTo(robot: Robot): void {
+        robot.moving = false
         robot.MoveToNextWaypoint()
     }
 
@@ -47,6 +48,18 @@ export class RobotService implements OnStart, OnTick {
 
         for (const robot of this.robots) {
             if (robot.owner === owner) {
+                robots.push(robot)
+            }
+        }
+
+        return robots
+    }
+
+    GetFollowingRobots(owner?: Player): Array<Robot> {
+        const robots: Array<Robot> = []
+
+        for (const robot of this.robots) {
+            if ((owner && robot.owner === owner || !owner) && robot.action === "following") {
                 robots.push(robot)
             }
         }
