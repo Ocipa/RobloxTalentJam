@@ -1,4 +1,4 @@
-import { Dependency } from "@flamework/core"
+import { Dependency, OnTick } from "@flamework/core"
 import { RobotModel } from "./interfaces"
 import { RobotService } from "server/services/robot";
 
@@ -9,10 +9,10 @@ const pathfindingService = game.GetService("PathfindingService")
 const runService = game.GetService("RunService")
 
 const agentParams: AgentParameters = {
-    AgentRadius: 2,
+    AgentRadius: 3,
     AgentHeight: 6.5,
     AgentCanJump: true,
-    WaypointSpacing: 4,
+    WaypointSpacing: 2,
     Costs: {
 
     }
@@ -21,6 +21,10 @@ const agentParams: AgentParameters = {
 export class Robot {
     owner?: Player
     model: RobotModel
+
+    target?: Vector3
+    lastPosition: Vector3
+    stuckLastTick: boolean
 
     currentWaypoint: number
     waypoints: Array<PathWaypoint>
@@ -36,6 +40,9 @@ export class Robot {
     constructor(owner?: Player, position?: Vector3) {
         this.owner = owner
         this.model = this.CreateModel()
+
+        this.lastPosition = Vector3.zero
+        this.stuckLastTick = false
 
         this.currentWaypoint = 0
         this.waypoints = []
@@ -65,7 +72,7 @@ export class Robot {
         const robotModel = replicatedStorage.FindFirstChild("robotModel") as RobotModel
 
         const model = robotModel.Clone()
-        model.Parent = workspace
+        model.Parent = workspace.FindFirstChild("robots") || workspace
         model.PrimaryPart.SetNetworkOwner(undefined)
 
         return model
@@ -87,6 +94,27 @@ export class Robot {
         }
     }
 
+    Jump(): void {
+        const humanoid = this.model.Humanoid
+        const humanoidState = humanoid.GetState()
+
+        let validState = false
+
+        switch (humanoidState) {
+            case Enum.HumanoidStateType.Running:
+                validState = true
+                break
+
+            case Enum.HumanoidStateType.RunningNoPhysics:
+                validState = true
+                break
+        }
+
+        if (validState) {
+            humanoid.Jump = true
+        }
+    }
+
     MoveToNextWaypoint(): void {
         this.currentWaypoint ++
 
@@ -97,20 +125,55 @@ export class Robot {
         const humanoid = this.model.Humanoid
         humanoid.MoveTo(this.waypoints[this.currentWaypoint].Position)
 
+        this.CheckForJump()
+    }
+
+    CheckForJump(): void {
         if (this.waypoints[this.currentWaypoint].Action === Enum.PathWaypointAction.Jump) {
-            humanoid.Jump = true
+            this.Jump()
+
+            return
+        }
+
+        if (!this.waypoints[this.currentWaypoint + 1]) {return}
+
+        const rayInfo = new RaycastParams()
+        rayInfo.FilterType = Enum.RaycastFilterType.Whitelist
+        rayInfo.IgnoreWater = true
+        rayInfo.FilterDescendantsInstances = [
+            workspace.FindFirstChild("Map") as Model,
+            workspace.Terrain
+        ]
+
+        const target = this.waypoints[this.currentWaypoint + 1].Position.add(new Vector3(0, 3, 0))
+
+        const origin = CFrame.lookAt(
+            this.model.PrimaryPart.Position,
+            target
+        )
+        const dis = origin.Position.sub(target).Magnitude
+
+        const result = workspace.Raycast(origin.Position, origin.LookVector.mul(dis - 1), rayInfo)
+
+        if (result && result.Instance) {
+            this.Jump()
         }
     }
 
-    ComputePath(target: Vector3): Promise<Path> {
+    ComputePath(target?: Vector3, force?: boolean): Promise<Path> {
         return new Promise<Path>((resolve) => {
             let start = this.GetPosition()
-            if (this.waypoints[this.currentWaypoint]) {
+            if (!force && this.waypoints[this.currentWaypoint]) {
                 start = this.waypoints[this.currentWaypoint].Position
             }
+
+            if (target) {
+                this.target = target
+            }
+            if (!this.target) {return}
         
             const path = pathfindingService.CreatePath(agentParams)
-            path.ComputeAsync(start, target)
+            path.ComputeAsync(start, this.target)
 
             this.waypoints = path.GetWaypoints()
             this.currentWaypoint = 0

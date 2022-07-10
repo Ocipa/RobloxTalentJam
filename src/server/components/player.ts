@@ -14,10 +14,13 @@ const workspace = game.GetService("Workspace")
 export class Ply extends BaseComponent<{}, Player> implements OnStart, OnTick {
     robotSpots: Array<Vector3>
 
+    lastPosition: Vector3
+
     constructor() {
         super()
 
         this.robotSpots = []
+        this.lastPosition = Vector3.zero
     }
 
     UpdateFollowing(): void {
@@ -29,15 +32,21 @@ export class Ply extends BaseComponent<{}, Player> implements OnStart, OnTick {
 
         const position = character.GetPivot().ToWorldSpace(new CFrame(new Vector3(0, 0, 3))).Position
 
-        const enemyService = Dependency<RobotService>()
-        const following = enemyService.GetFollowingRobots(this.instance)
+        const isNear = this.lastPosition.FuzzyEq(position, 0.025)
+
+        if (!isNear) {
+            this.lastPosition = position
+
+            const robotService = Dependency<RobotService>()
+            const following = robotService.GetFollowingRobots(this.instance)
         
-        for (const robot of following) {
-            robot.ComputePath(position).andThen(() => {
-                if (robot.moving === false) {
-                    robot.MoveToNextWaypoint()
-                }
-            })
+            for (const robot of following) {
+                robot.ComputePath(position).andThen(() => {
+                    if (robot.moving === false) {
+                        robot.MoveToNextWaypoint()
+                    }
+                })
+            }
         }
     }
 

@@ -57,13 +57,35 @@ export class RobotService implements OnStart, OnTick {
         })
     }
 
-    count = 0
+    tickDebounce = 0
     onTick(dt: number): void {
-        this.count++
+        this.tickDebounce += dt
 
-        if (this.count < 60) {return}
-        this.count = 0
+        if(this.tickDebounce < 0.2) {
+            return
+        }
+        this.tickDebounce = 0
 
+        for (const robot of this.robots) {
+            const position = robot.model.PrimaryPart.Position
+            const isNear = robot.lastPosition.FuzzyEq(position, 0.01)
 
+            if (isNear) {
+                robot.ComputePath(undefined, true)
+                robot.MoveToNextWaypoint()
+
+                if (robot.stuckLastTick) {
+                    robot.Jump()
+                }
+            } else {
+                robot.lastPosition = position
+            }
+
+            if (robot.waypoints.size() - robot.currentWaypoint > 1) {
+                robot.stuckLastTick = isNear
+            } else {
+                robot.stuckLastTick = false
+            }
+        }
     }
 }
