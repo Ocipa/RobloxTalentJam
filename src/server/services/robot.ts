@@ -13,22 +13,6 @@ export class RobotService implements OnStart, OnTick {
 
     constructor() {
         this.robots = []
-
-        // const starts = workspace.FindFirstChild("starts") as Folder
-        // task.delay(1, () => {
-        //     if (starts) {
-        //         for (const start of starts.GetChildren() as Array<Part>) {
-        //             const test2 = workspace.FindFirstChild("test2") as Part
-        
-        //             const robot = this.AddRobot(undefined, start.Position)
-        //             const path = robot.ComputePath(test2.Position)
-        
-        //             this.RenderDebugPath(path)
-    
-        //             robot.MoveToNextWaypoint()
-        //         }
-        //     }
-        // })
     }
 
     AddRobot(owner?: Player, position?: Vector3): Robot {

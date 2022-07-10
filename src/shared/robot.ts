@@ -56,6 +56,7 @@ export class Robot {
 
         const model = robotModel.Clone()
         model.Parent = workspace
+        model.PrimaryPart.SetNetworkOwner(undefined)
 
         return model
     }
@@ -78,7 +79,7 @@ export class Robot {
 
     MoveToNextWaypoint(): void {
         this.currentWaypoint ++
-        
+
         if (!this.waypoints[this.currentWaypoint]) {return}
 
         this.moving = true
@@ -91,14 +92,20 @@ export class Robot {
         }
     }
 
-    ComputePath(target: Vector3): Path {
-        const start = this.GetPosition()
+    ComputePath(target: Vector3): Promise<Path> {
+        return new Promise<Path>((resolve) => {
+            let start = this.GetPosition()
+            if (this.waypoints[this.currentWaypoint]) {
+                start = this.waypoints[this.currentWaypoint].Position
+            }
         
-        const path = pathfindingService.CreatePath(agentParams)
-        path.ComputeAsync(start, target)
+            const path = pathfindingService.CreatePath(agentParams)
+            path.ComputeAsync(start, target)
 
-        this.waypoints = path.GetWaypoints()
-        this.currentWaypoint = 0
-        return path
+            this.waypoints = path.GetWaypoints()
+            this.currentWaypoint = 0
+            
+            resolve(path)
+        })
     }
 }

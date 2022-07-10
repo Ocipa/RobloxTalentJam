@@ -27,17 +27,17 @@ export class Ply extends BaseComponent<{}, Player> implements OnStart, OnTick {
         const humanoid = character.FindFirstChild("Humanoid") as Humanoid
         if (!humanoid || humanoid.Health <= 0) {return}
 
-        const position = character.GetPivot().ToWorldSpace(new CFrame(new Vector3(0, 0, -3))).Position
+        const position = character.GetPivot().ToWorldSpace(new CFrame(new Vector3(0, 0, 3))).Position
 
         const enemyService = Dependency<RobotService>()
         const following = enemyService.GetFollowingRobots(this.instance)
         
         for (const robot of following) {
-            robot.ComputePath(position)
-            
-            if (robot.moving === false) {
-                robot.MoveToNextWaypoint()
-            }
+            robot.ComputePath(position).andThen(() => {
+                if (robot.moving === false) {
+                    robot.MoveToNextWaypoint()
+                }
+            })
         }
     }
 
