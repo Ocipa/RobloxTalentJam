@@ -9,12 +9,12 @@ const pathfindingService = game.GetService("PathfindingService")
 const runService = game.GetService("RunService")
 
 const agentParams: AgentParameters = {
-    AgentRadius: 3,
+    AgentRadius: 1.6,
     AgentHeight: 6.5,
     AgentCanJump: true,
-    WaypointSpacing: 2,
+    WaypointSpacing: 3.2,
     Costs: {
-
+        Door: 0.1
     }
 }
 
@@ -156,7 +156,10 @@ export class Robot {
         const result = workspace.Raycast(origin.Position, origin.LookVector.mul(dis - 1), rayInfo)
 
         if (result && result.Instance) {
-            this.Jump()
+            const modifier = result.Instance.FindFirstChildOfClass("PathfindingModifier")
+            if ((!modifier && result.Instance.CanCollide) || (modifier && !modifier.PassThrough)) {
+                this.Jump()
+            }
         }
     }
 
