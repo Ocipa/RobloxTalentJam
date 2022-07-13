@@ -30,7 +30,8 @@ export class Ply extends BaseComponent<{}, Player> implements OnStart, OnTick {
         const humanoid = character.FindFirstChild("Humanoid") as Humanoid
         if (!humanoid || humanoid.Health <= 0) {return}
 
-        const position = character.GetPivot().ToWorldSpace(new CFrame(new Vector3(0, 0, 3))).Position
+        // const position = character.GetPivot().ToWorldSpace(new CFrame(new Vector3(0, 0, 3))).Position
+        const position = character.GetPivot().Position
 
         const isNear = this.lastPosition.FuzzyEq(position, 0.025)
 
@@ -57,6 +58,10 @@ export class Ply extends BaseComponent<{}, Player> implements OnStart, OnTick {
             this.instance.CharacterAppearanceLoaded.Wait()
 
             task.wait()
+
+            if (this.instance.Character) {
+                this.instance.Character.Parent = workspace.FindFirstChild("characters") as Folder
+            }
 
             const robots: Array<Robot> = robotService.GetRobotsOwnedByPlayer(this.instance)
 

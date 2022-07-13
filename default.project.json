@@ -53,6 +53,10 @@
 				"$className": "Folder"
 			},
 
+			"characters": {
+				"$className": "Folder"
+			},
+
 			"debug": {
 				"$className": "Folder"
 			}

@@ -12,7 +12,7 @@ const agentParams: AgentParameters = {
     AgentRadius: 1.6,
     AgentHeight: 6.5,
     AgentCanJump: true,
-    WaypointSpacing: 3.2,
+    WaypointSpacing: 4.5,
     Costs: {
         Door: 0.1
     }
@@ -31,6 +31,7 @@ export class Robot {
 
     action: "following" | "attacking"
     moving: boolean
+    nextMove?: Promise<void>
 
     debugParts: {
         pathJoints: Array<Part>
@@ -115,17 +116,71 @@ export class Robot {
         }
     }
 
-    MoveToNextWaypoint(): void {
-        this.currentWaypoint ++
+    MoveToNextWaypoint(): Promise<void> {
+        if (this.nextMove) {
+            this.nextMove.cancel()
+        }
 
-        if (!this.waypoints[this.currentWaypoint]) {return}
+        const promise: Promise<void> = new Promise((resolve) => {
+            this.nextMove = promise
+            this.moving = true
 
-        this.moving = true
+            while (this.CheckForCollisions()) {
+                if (this.nextMove !== promise) {
+                    return
+                }
 
-        const humanoid = this.model.Humanoid
-        humanoid.MoveTo(this.waypoints[this.currentWaypoint].Position)
+                task.wait()
+            }
 
-        this.CheckForJump()
+            this.currentWaypoint ++
+            if (!this.waypoints[this.currentWaypoint]) {return}
+
+            const humanoid = this.model.Humanoid
+            humanoid.MoveTo(this.waypoints[this.currentWaypoint].Position)
+
+            this.CheckForJump()
+
+            this.nextMove = undefined
+            resolve()
+        })
+
+        return promise
+    }
+
+    CheckForCollisions(): boolean {
+        if (!this.waypoints[this.currentWaypoint]) {return false}
+        if (!this.waypoints[this.currentWaypoint + 1]) {return false}
+
+        const p1 = this.waypoints[this.currentWaypoint].Position
+        const p2 = this.waypoints[this.currentWaypoint + 1].Position
+
+        const dis = p2.sub(p1).Magnitude
+        const center = p1.add(p2.sub(p1).div(2))
+
+        const part = new Instance("Part")
+        part.Size = new Vector3(agentParams.AgentHeight, dis, dis)
+        part.Position = center.add(new Vector3(0, agentParams.AgentHeight as number / 2, 0))
+        part.Orientation = new Vector3(0, 0, -90)
+        part.Shape = Enum.PartType.Cylinder
+        part.Anchored = true
+        part.CanCollide = true
+        part.Parent = workspace
+
+        const touching = part.GetTouchingParts()
+
+        part.Destroy()
+
+        for (const p of touching) {
+            const robotsFolder = workspace.FindFirstChild("robots") as Folder
+            const charactersFolder = workspace.FindFirstChild("characters") as Folder
+
+            if ((p.IsDescendantOf(robotsFolder) || p.IsDescendantOf(charactersFolder)) && !p.IsDescendantOf(this.model)) {
+                return true
+            }
+        }
+
+        return false
     }
 
     CheckForJump(): void {
@@ -181,7 +236,7 @@ export class Robot {
             this.waypoints = path.GetWaypoints()
             this.currentWaypoint = 0
 
-            this.RenderDebugPath(path)
+            // this.RenderDebugPath(path)
             
             resolve(path)
         })

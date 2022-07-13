@@ -75,13 +75,14 @@ export class RobotService implements OnStart, OnTick {
                 robot.MoveToNextWaypoint()
 
                 if (robot.stuckLastTick) {
+                    // print(robot.nextMove)
                     robot.Jump()
                 }
             } else {
                 robot.lastPosition = position
             }
 
-            if (robot.waypoints.size() - robot.currentWaypoint > 1) {
+            if (robot.waypoints.size() - robot.currentWaypoint > 2 && !robot.nextMove) {
                 robot.stuckLastTick = isNear
             } else {
                 robot.stuckLastTick = false
