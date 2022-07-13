@@ -56,17 +56,15 @@ export class Robot {
             pathConnections: []
         }
 
-        this.Spawn(position)
-
-        this.model.Humanoid.MoveToFinished.Connect((reached) => {
-            if (runService.IsServer()) {
-                const robotService = Dependency<RobotService>()
-
-                robotService.FinishedMoveTo(this)
-            }
+        this.Spawn(position).andThen(() => {
+            this.model.Humanoid.MoveToFinished.Connect((reached) => {
+                if (runService.IsServer()) {
+                    const robotService = Dependency<RobotService>()
+    
+                    robotService.FinishedMoveTo(this)
+                }
+            })
         })
-
-        print("%s added a robot".format(tostring(owner?.Name)))
     }
 
     private CreateModel(): RobotModel {
@@ -83,16 +81,38 @@ export class Robot {
         return this.model.GetPivot().Position
     }
 
-    Spawn(position?: Vector3): void {
-        if (position) {
-            this.model.PivotTo(new CFrame(position))
+    Spawn(position?: Vector3): Promise<void> {
+        return new Promise((resolve) => {
+            while (!this.owner || !this.owner.Character) {
+                task.wait()
+            }
 
-        } else if (this.owner && this.owner.Character) {
-            this.model.PivotTo(this.owner.Character.GetPivot())
+            if (!position) {
+                position = this.owner.Character.GetPivot().Position
+            }
 
-        } else {
-            this.model.PivotTo(new CFrame(Vector3.zero))
-        }
+            const random = new Random()
+            const dir = random.NextUnitVector().mul(new Vector3(1, 0, 1))
+
+            let p1 = position.add(dir.mul(agentParams.AgentRadius as number * 2))
+            let p2 = p1.add(dir.mul(agentParams.AgentRadius as number * 2))
+
+            while (this.CheckForCollisions(p1, p2)) {
+                p1 = p2
+                p2 = p1.add(dir.mul(agentParams.AgentRadius as number * 2))
+            }
+
+            this.model.PivotTo(new CFrame(p1.Lerp(p2, 0.5)))
+
+            this.waypoints = []
+            this.currentWaypoint = 0
+            this.model.Humanoid.MoveTo(new CFrame(p1.Lerp(p2, 0.5)).Position)
+
+            this.ComputePath(undefined, true)
+            this.MoveToNextWaypoint()
+
+            resolve()
+        })
     }
 
     Jump(): void {
@@ -124,7 +144,13 @@ export class Robot {
         const promise: Promise<void> = new Promise((resolve) => {
             this.nextMove = promise
 
-            while (this.CheckForCollisions()) {
+            if (!this.waypoints[this.currentWaypoint]) {return false}
+            if (!this.waypoints[this.currentWaypoint + 1]) {return false}
+
+            const p1 = this.waypoints[this.currentWaypoint].Position
+            const p2 = this.waypoints[this.currentWaypoint + 1].Position
+
+            while (this.CheckForCollisions(p1, p2)) {
                 if (this.nextMove !== promise) {
                     return
                 }
@@ -149,13 +175,7 @@ export class Robot {
         return promise
     }
 
-    CheckForCollisions(): boolean {
-        if (!this.waypoints[this.currentWaypoint]) {return false}
-        if (!this.waypoints[this.currentWaypoint + 1]) {return false}
-
-        const p1 = this.waypoints[this.currentWaypoint].Position
-        const p2 = this.waypoints[this.currentWaypoint + 1].Position
-
+    CheckForCollisions(p1: Vector3, p2: Vector3): boolean {
         const dis = math.clamp(p2.sub(p1).Magnitude * 3, 2, 10)
         const center = p1.add(p2.sub(p1).div(2))
 
@@ -170,11 +190,7 @@ export class Robot {
 
         const touching = part.GetTouchingParts()
 
-        part.CanCollide = false
-        part.Transparency = 0.5
-        task.delay(0.25,() => {
-            part.Destroy()
-        })
+        part.Destroy()
 
         for (const p of touching) {
             const robotsFolder = workspace.FindFirstChild("robots") as Folder
