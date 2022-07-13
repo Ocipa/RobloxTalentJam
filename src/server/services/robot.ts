@@ -22,6 +22,25 @@ export class RobotService implements OnStart, OnTick {
         return robot
     }
 
+    RemoveRobot(owner?: Player) {
+        let oldestRobot: Robot | undefined
+
+        for (const robot of this.robots) {
+            if (!owner || robot.owner === owner) {
+                if (!oldestRobot || robot.timestamp < oldestRobot.timestamp) {
+                    oldestRobot = robot
+                }
+            }
+        }
+
+        if (oldestRobot) {
+            const index = this.robots.indexOf(oldestRobot)
+            this.robots.remove(index)
+
+            oldestRobot.Destroy()
+        }
+    }
+
     FinishedMoveTo(robot: Robot): void {
         robot.moving = false
         robot.MoveToNextWaypoint()
@@ -54,6 +73,10 @@ export class RobotService implements OnStart, OnTick {
     onStart(): void {
         events.AddRobot.connect((player) => {
             this.AddRobot(player)
+        })
+
+        events.RemoveRobot.connect((player) => {
+            this.RemoveRobot(player)
         })
     }
 

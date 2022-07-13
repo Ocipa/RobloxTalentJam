@@ -6,6 +6,7 @@ import { Networking } from "@flamework/networking";
 // Client -> Server events
 interface ServerEvents {
     AddRobot(): void
+    RemoveRobot(): void
 }
 
 

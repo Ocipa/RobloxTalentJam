@@ -14,7 +14,8 @@ const agentParams: AgentParameters = {
     AgentCanJump: true,
     WaypointSpacing: 3,
     Costs: {
-        Door: 0.1
+        Door: 0.1,
+        Lava: math.huge
     }
 }
 
@@ -38,6 +39,8 @@ export class Robot {
         pathConnections: Array<Part>
     }
 
+    timestamp: number
+
     constructor(owner?: Player, position?: Vector3) {
         this.owner = owner
         this.model = this.CreateModel()
@@ -55,6 +58,8 @@ export class Robot {
             pathJoints: [],
             pathConnections: []
         }
+
+        this.timestamp = tick()
 
         this.Spawn(position).andThen(() => {
             this.model.Humanoid.MoveToFinished.Connect((reached) => {
@@ -163,12 +168,15 @@ export class Robot {
             this.currentWaypoint ++
             if (!this.waypoints[this.currentWaypoint]) {return}
 
-            const humanoid = this.model.Humanoid
-            humanoid.MoveTo(this.waypoints[this.currentWaypoint].Position)
+            const humanoid = this.model.FindFirstChildOfClass("Humanoid")
+            if (humanoid) {
+                humanoid.MoveTo(this.waypoints[this.currentWaypoint].Position)
 
-            this.CheckForJump()
+                this.CheckForJump()
 
-            this.nextMove = undefined
+                this.nextMove = undefined
+            }
+
             resolve()
         })
 
@@ -319,5 +327,9 @@ export class Robot {
         for (let k=i; k < this.debugParts.pathConnections.size(); k++) {
             this.debugParts.pathConnections[k].Parent = undefined
         }
+    }
+
+    Destroy(): void {
+        this.model.Destroy()
     }
 }

@@ -19,3 +19,10 @@ contextActionService.BindAction("spawnRobot", (name, inputState, inputObject) =>
         events.AddRobot.fire()
     }
 }, false, Enum.KeyCode.E)
+
+
+contextActionService.BindAction("removeRobot", (name, inputState, inputObject) => {
+    if (inputState === Enum.UserInputState.End) {
+        events.RemoveRobot.fire()
+    }
+}, false, Enum.KeyCode.R)
