@@ -12,7 +12,7 @@ const agentParams: AgentParameters = {
     AgentRadius: 1.6,
     AgentHeight: 6.5,
     AgentCanJump: true,
-    WaypointSpacing: 4.5,
+    WaypointSpacing: 3,
     Costs: {
         Door: 0.1
     }
@@ -123,7 +123,6 @@ export class Robot {
 
         const promise: Promise<void> = new Promise((resolve) => {
             this.nextMove = promise
-            this.moving = true
 
             while (this.CheckForCollisions()) {
                 if (this.nextMove !== promise) {
@@ -132,6 +131,8 @@ export class Robot {
 
                 task.wait()
             }
+
+            this.moving = true
 
             this.currentWaypoint ++
             if (!this.waypoints[this.currentWaypoint]) {return}
@@ -155,7 +156,7 @@ export class Robot {
         const p1 = this.waypoints[this.currentWaypoint].Position
         const p2 = this.waypoints[this.currentWaypoint + 1].Position
 
-        const dis = p2.sub(p1).Magnitude
+        const dis = math.clamp(p2.sub(p1).Magnitude * 3, 2, 10)
         const center = p1.add(p2.sub(p1).div(2))
 
         const part = new Instance("Part")
@@ -169,7 +170,11 @@ export class Robot {
 
         const touching = part.GetTouchingParts()
 
-        part.Destroy()
+        part.CanCollide = false
+        part.Transparency = 0.5
+        task.delay(0.25,() => {
+            part.Destroy()
+        })
 
         for (const p of touching) {
             const robotsFolder = workspace.FindFirstChild("robots") as Folder
@@ -234,7 +239,7 @@ export class Robot {
             path.ComputeAsync(start, this.target)
 
             this.waypoints = path.GetWaypoints()
-            this.currentWaypoint = 0
+            this.currentWaypoint = 1
 
             // this.RenderDebugPath(path)
             
