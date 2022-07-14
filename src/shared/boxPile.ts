@@ -28,13 +28,17 @@ export class BoxPile {
         })
     }
 
-    TakeBox(): void {
+    TakeBox(): boolean {
         const index = this.boxes.size()
 
         if (index > 0) {
             this.boxes[index - 1].Destroy()
             this.boxes.remove(index - 1)
+
+            return true
         }
+
+        return false
     }
 
     PlaceBox(): void {

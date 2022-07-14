@@ -69,8 +69,13 @@ export class RobotService implements OnStart, OnTick {
             const targetPos = actionObject.model.GetPivot().Position
 
             if (pos.sub(targetPos).Magnitude < 15) {
-                actionObject.TakeBox()
-                robot.Assign("dropoffBoxes", actionObject.target)
+                const success = actionObject.TakeBox()
+
+                if (success) {
+                    robot.Assign("dropoffBoxes", actionObject.target)
+                } else {
+                    robot.Assign("following")
+                }
             }
 
         } else if (robot.action === "dropoffBoxes" && robot.actionObject) {

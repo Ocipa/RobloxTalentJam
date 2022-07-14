@@ -65,6 +65,10 @@
 				"$className": "Folder"
 			},
 
+			"notes": {
+				"$path": "assets/notes.rbxm"
+			},
+
 			"boxPiles": {
 				"$className": "Folder",
 

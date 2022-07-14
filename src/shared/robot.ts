@@ -106,7 +106,7 @@ export class Robot {
             let p1 = position.add(dir.mul(agentParams.AgentRadius as number * 2))
             let p2 = p1.add(dir.mul(agentParams.AgentRadius as number * 2))
 
-            while (this.CheckForCollisions(p1, p2)) {
+            while (this.CheckForCollisions(p1, p2, 4)) {
                 p1 = p2
                 p2 = p1.add(dir.mul(agentParams.AgentRadius as number * 2))
             }
@@ -114,7 +114,6 @@ export class Robot {
             this.model.PivotTo(new CFrame(p1.Lerp(p2, 0.5)))
 
             this.waypoints = []
-            this.currentWaypoint = 0
             this.model.Humanoid.MoveTo(new CFrame(p1.Lerp(p2, 0.5)).Position)
 
             this.ComputePath(true)
@@ -187,8 +186,12 @@ export class Robot {
         return promise
     }
 
-    CheckForCollisions(p1: Vector3, p2: Vector3): boolean {
-        const dis = math.clamp(p2.sub(p1).Magnitude * 3, 2, 10)
+    CheckForCollisions(p1: Vector3, p2: Vector3, mul?: number): boolean {
+        if (mul === undefined || mul === 0) {
+            mul = 2
+        }
+
+        const dis = math.clamp(p2.sub(p1).Magnitude * mul, 2, 10)
         const center = p1.add(p2.sub(p1).div(2))
 
         const part = new Instance("Part")

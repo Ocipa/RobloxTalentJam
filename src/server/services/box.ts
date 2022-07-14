@@ -15,14 +15,11 @@ export class BoxService {
 
         const boxPiles = workspace.FindFirstChild("boxPiles") as Folder
 
-        const pile1 = this.AddPile(boxPiles.FindFirstChild("Pile1") as Pile, 2)
+        const pile1 = this.AddPile(boxPiles.FindFirstChild("Pile1") as Pile, 41)
         const pile2 = this.AddPile(boxPiles.FindFirstChild("Pile2") as Pile, 0)
 
         pile1.AssignTarget(pile2)
         pile2.AssignTarget(pile1)
-
-
-        this.piles[0].TakeBox()
     }
 
     AddPile(pile: Pile, boxes: number): BoxPile {
