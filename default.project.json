@@ -92,6 +92,20 @@
 			"$properties": {
 				"RespectFilteringEnabled": true
 			}
+		},
+		"Lighting": {
+			"$className": "Lighting",
+			"$properties": {
+				"Ambient": [0.27, 0.27, 0.27],
+				"Brightness": 3,
+				"EnvironmentDiffuseScale": 1,
+				"EnvironmentSpecularScale": 1,
+				"GlobalShadows": true,
+				"OutdoorAmbient": [0.27, 0.27, 0.27],
+				"ShadowSoftness": 0.2,
+				"ClockTime": 14.5,
+				"GeographicLatitude": 0
+			}
 		}
 	}
 }
