@@ -1,6 +1,8 @@
 import { Dependency, OnTick } from "@flamework/core"
 import { RobotModel } from "./interfaces"
 import { RobotService } from "server/services/robot";
+import { robotAction } from "./types";
+import { BoxPile } from "./boxPile";
 
 
 const workspace = game.GetService("Workspace")
@@ -30,9 +32,11 @@ export class Robot {
     currentWaypoint: number
     waypoints: Array<PathWaypoint>
 
-    action: "following" | "attacking"
+    action: robotAction
     moving: boolean
     nextMove?: Promise<void>
+
+    actionObject?: unknown
 
     debugParts: {
         pathJoints: Array<Part>
@@ -113,7 +117,7 @@ export class Robot {
             this.currentWaypoint = 0
             this.model.Humanoid.MoveTo(new CFrame(p1.Lerp(p2, 0.5)).Position)
 
-            this.ComputePath(undefined, true)
+            this.ComputePath(true)
             this.MoveToNextWaypoint()
 
             resolve()
@@ -247,17 +251,30 @@ export class Robot {
         }
     }
 
-    ComputePath(target?: Vector3, force?: boolean): Promise<Path> {
+    ComputePath(force?: boolean): Promise<Path> {
         return new Promise<Path>((resolve) => {
             let start = this.GetPosition()
             if (!force && this.waypoints[this.currentWaypoint]) {
                 start = this.waypoints[this.currentWaypoint].Position
             }
 
-            if (target) {
-                this.target = target
+            let target: Vector3
+
+            if (this.action === "pickupBoxes" && this.actionObject) {
+                const object = this.actionObject as BoxPile
+
+                target = object.model.GetPivot().Position
+
+            } else if (this.action === "dropoffBoxes" && this.actionObject) {
+                const object = this.actionObject as BoxPile
+
+                target = object.model.GetPivot().Position
+
+            } else {
+                target = this.owner?.Character?.GetPivot().Position as Vector3
             }
-            if (!this.target) {return}
+
+            this.target = target
         
             const path = pathfindingService.CreatePath(agentParams)
             path.ComputeAsync(start, this.target)
@@ -269,6 +286,13 @@ export class Robot {
             
             resolve(path)
         })
+    }
+
+    Assign(action: robotAction, aObject?: unknown): void {
+        this.action = action
+        this.actionObject = aObject
+
+        this.ComputePath(true)
     }
 
     private RenderDebugPath(path: Path): void {

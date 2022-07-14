@@ -42,7 +42,7 @@ export class Ply extends BaseComponent<{}, Player> implements OnStart, OnTick {
             const following = robotService.GetFollowingRobots(this.instance)
         
             for (const robot of following) {
-                robot.ComputePath(position).andThen(() => {
+                robot.ComputePath().andThen(() => {
                     if (robot.moving === false) {
                         robot.MoveToNextWaypoint()
                     }

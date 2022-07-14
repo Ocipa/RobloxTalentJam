@@ -26,6 +26,10 @@
 
 			"robotModel" : {
 				"$path": "assets/robotModel.rbxm"
+			},
+
+			"box": {
+				"$path": "assets/box.rbxm"
 			}
 		},
 		"StarterPlayer": {
@@ -59,6 +63,18 @@
 
 			"debug": {
 				"$className": "Folder"
+			},
+
+			"boxPiles": {
+				"$className": "Folder",
+
+				"Pile1": {
+					"$path": "assets/pile1.rbxm"
+				},
+
+				"Pile2": {
+					"$path": "assets/pile2.rbxm"
+				}
 			}
 		},
 		"HttpService": {
